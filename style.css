@@ -1,12 +1,14 @@
-body, div, table, tr, td  {
+body, div, table, tr, td, button  {
   margin: 0;
   padding: 0;
+  border: none;
 }
 
 .table__wrap {
   margin: 70px;
   position: relative;
   display: inline-block;
+  vertical-align: top;
 }
 
 .dynamic__table {
@@ -43,14 +45,14 @@ body, div, table, tr, td  {
   opacity: 0.5;
 }
 
-.minus--button {
+.minus__button {
   background-color: #b20000;
   visibility: hidden;
   transition-property: left, top;
   transition-duration: 0.3s;
 }
 
-.plus--button {
+.plus__button {
   background-color: #f3a500;
 }
 

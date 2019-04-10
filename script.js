@@ -1,116 +1,125 @@
-'use strict';
+class DynamicTable {
+  constructor(selector, size){
 
-//Table start size
-const TABLE_START_STATE = 4;
+    //Variable for button hide timer
+    this.hideButtonsTimer;
 
-//Variables for cell indexes when mouseover
-let rowId;
-let colId;
+    //Variables for cell indexes when mouseover
+    this.colId;
+    this.rowId;
 
-//Variable for button hide timer
-let hideButtonsTimer;
+    //Variable for table wrap
+    let $el = document.querySelector(selector);
 
-//Variable for table
-const $DYNAMIC_TABLE = document.querySelector('.dynamic__table'); 
+    //Variable for table
+    this.$table = $el.querySelector('.dynamic__table');
 
-//Variables for buttons of table
-const $TABLE_BUTTONS = document.querySelectorAll('.table__button');
-const $MINUS_BUTTON_TOP = document.querySelector('.top__minus');
-const $MINUS_BUTTON_LEFT = document.querySelector('.left__minus');
-const $PLUS_BUTTON_RIGHT = document.querySelector('.right__plus');
-const $PLUS_BUTTON_BOTTOM = document.querySelector('.bottom__plus');
+    //Variables for buttons of table
+    this.$minus_button_top = $el.querySelector('.top__minus');
+    this.$minus_button_left = $el.querySelector('.left__minus');
+    this.$plus_button_right = $el.querySelector('.right__plus');
+    this.$plus_button_bottom = $el.querySelector('.bottom__plus');
+    this.$minus_buttons = $el.querySelectorAll('.minus__button')
 
-//Initialize start state of the table
-window.onload = () => {
-  for (let i = 0; i < TABLE_START_STATE; i++) {
-    let $row = $DYNAMIC_TABLE.insertRow(i);
-    for (let j = 0; j < TABLE_START_STATE; j++) {
-      $row.insertCell(j);
+    //Initialize start state of the table
+    this.initialize(size);
+
+    //Add event handlers
+    this.$table.addEventListener('mouseover', this.showButtons);
+    this.$table.addEventListener('mouseout', this.hideButtonsTimeout);
+    this.$table.addEventListener('mouseover', this.tdMouseOver);
+    this.$plus_button_bottom.addEventListener('click', this.addRow);
+    this.$plus_button_right.addEventListener('click', this.addColumn);
+    this.$minus_button_left.addEventListener('click', this.deleteRow);
+    this.$minus_button_top.addEventListener('click', this.deleteColumn);
+
+    for (let btn of this.$minus_buttons) {
+      btn.addEventListener('mouseover', this.showButtons);
+      btn.addEventListener('mouseout', this.hideButtonsTimeout);
+      btn.addEventListener('click', this.hideButtons);
     }
-  }  
-}
-
-//Function for show minus buttons
-let showButtons = () => {
-  clearTimeout(hideButtonsTimer);
-
-  if ($DYNAMIC_TABLE.rows[0].cells.length > 1) {
-    $MINUS_BUTTON_TOP.style.visibility = 'visible';
   }
 
-  if ($DYNAMIC_TABLE.rows.length > 1) {
-    $MINUS_BUTTON_LEFT.style.visibility = 'visible';
+  //Function for initialize start state of the table
+  initialize(size){
+    for (let i = 0; i < size; i++) {
+      let $row = this.$table.insertRow(i);
+      for (let j = 0; j < size; j++) {
+        $row.insertCell(j);
+      }
+    }
+  }
+
+  //Function for show minus buttons
+  showButtons = () => {
+    clearTimeout(this.hideButtonsTimer);
+
+    if (this.$table.rows[0].cells.length > 1) {
+      this.$minus_button_top.style.visibility = 'visible';
+    }
+  
+    if (this.$table.rows.length > 1) {
+      this.$minus_button_left.style.visibility = 'visible';
+    }
+  }
+
+  //Function for hide minus buttons
+  hideButtons = () => {
+    this.$minus_button_left.style.visibility = 'hidden';
+    this.$minus_button_top.style.visibility = 'hidden';
+  }
+
+  //Function for hide minus buttons with timeout
+  hideButtonsTimeout = () => {
+    this.hideButtonsTimer = setTimeout(this.hideButtons, 1000);
+  }
+
+  //Function for moving buttons and get cell indexes when mouseover
+  tdMouseOver = event => {
+    let target = event.target;
+    //Return if element is't cell
+    if (target.tagName != 'TD') return;
+    //Change position of buttons
+    this.$minus_button_top.style.left = `${target.offsetLeft}px`;
+    this.$minus_button_left.style.top = `${target.offsetTop}px`;
+    //Save the cell indexes
+    this.colId = target.cellIndex;
+    this.rowId = target.parentNode.rowIndex;
+  }
+
+  //Function for add row to bottom of table
+  addRow = () => {
+    let newRow = this.$table.insertRow();
+    for (let i = 0; i < this.$table.rows[0].cells.length; i++) {
+      newRow.insertCell();
+    }
+  }
+
+  //Function for add column to right of table
+  addColumn = () => {
+    for (let i = 0; i < this.$table.rows.length; i++) {
+      this.$table.rows[i].insertCell();
+    }
+  }
+
+  //Function for delete selected row
+  deleteRow = () => {
+    this.$table.deleteRow(this.rowId);
+    if (this.rowId === this.$table.rows.length) {
+      this.$minus_button_left.style.top = `${this.$table.rows[--this.rowId].offsetTop}px`;
+    }
+  }
+
+  //Function for delete selected column
+  deleteColumn = () => {
+    for (let i = 0; i < this.$table.rows.length; i++) {
+      this.$table.rows[i].deleteCell(this.colId);
+    }
+    if (this.colId === this.$table.rows[0].cells.length) {
+      this.$minus_button_top.style.left = `${this.$table.rows[0].cells[--this.colId].offsetLeft}px`;
+    }
   }
 }
 
-//Function for hide minus buttons
-let hideButtons = () => {
-  $MINUS_BUTTON_LEFT.style.visibility = 'hidden';
-  $MINUS_BUTTON_TOP.style.visibility = 'hidden';
-}
-
-//Function for hide minus buttons with timeout
-let hideButtonsTimeout = () => {
-  hideButtonsTimer = setTimeout(hideButtons, 1000);
-}
-
-//Function for moving buttons and get cell indexes when mouseover
-let tdMouseOver = event => {
-  let target = event.target;
-  //Return if element is't cell
-  if (target.tagName != 'TD') return;
-  //Change position of buttons
-  $MINUS_BUTTON_TOP.style.left = `${target.offsetLeft}px`;
-  $MINUS_BUTTON_LEFT.style.top = `${target.offsetTop}px`;
-  //Save the cell indexes
-  colId = target.cellIndex;
-  rowId = target.parentNode.rowIndex;
-}
-
-//Function for add row to bottom of table
-let addRow = () => {
-  let newRow = $DYNAMIC_TABLE.insertRow();
-  for (let i = 0; i < $DYNAMIC_TABLE.rows[0].cells.length; i++) {
-    newRow.insertCell();
-  }
-}
-
-//Function for add column to right of table
-let addColumn = () => {
-  for (let i = 0; i < $DYNAMIC_TABLE.rows.length; i++) {
-    $DYNAMIC_TABLE.rows[i].insertCell();
-  }
-}
-
-//Function for delete selected row
-let deleteRow = () => {
-  $DYNAMIC_TABLE.deleteRow(rowId);
-  if (rowId === $DYNAMIC_TABLE.rows.length) {
-    $MINUS_BUTTON_LEFT.style.top = `${$DYNAMIC_TABLE.rows[--rowId].offsetTop}px`;
-  }
-}
-
-//Function for delete selected column
-let deleteColumn = () => {
-  for (let i = 0; i < $DYNAMIC_TABLE.rows.length; i++) {
-    $DYNAMIC_TABLE.rows[i].deleteCell(colId);
-  }
-  if (colId === $DYNAMIC_TABLE.rows[0].cells.length) {
-    $MINUS_BUTTON_TOP.style.left = `${$DYNAMIC_TABLE.rows[0].cells[--colId].offsetLeft}px`;
-  }
-}
-
-//Add event handlers
-$DYNAMIC_TABLE.addEventListener('mouseover', showButtons);
-$DYNAMIC_TABLE.addEventListener('mouseout', hideButtonsTimeout);
-$DYNAMIC_TABLE.addEventListener('mouseover', tdMouseOver);
-$PLUS_BUTTON_BOTTOM.addEventListener('click', addRow);
-$PLUS_BUTTON_RIGHT.addEventListener('click', addColumn);
-$MINUS_BUTTON_LEFT.addEventListener('click', deleteRow);
-$MINUS_BUTTON_TOP.addEventListener('click', deleteColumn);
-
-for (let btn of $TABLE_BUTTONS) {
-  btn.addEventListener('mouseover', showButtons);
-  btn.addEventListener('mouseout', hideButtonsTimeout);
-  btn.addEventListener('click', hideButtons);
-}
+const table = new DynamicTable('#table1', 4);
+const table2 = new DynamicTable('#table2', 4);
